@@ -56,11 +56,12 @@ sub parse_datetime {
         }
         /\G\s*/gc;
         /\G\S/gc and croak "invalid date-time specification '$spec'";
+
+        $self->{date}->set_time_zone('UTC');
+
+        return $self->{date};
     }
 
-    $self->{date}->set_time_zone('UTC');
-
-    warn "datetime: $self->{date}\n";
 }
 
 sub _parse_spec_base {
@@ -155,7 +156,7 @@ sub _parse_date {
     elsif (/\Gnext\s+($period_re)/gcio) {
         # NEXT inc_dec_period
         $self->{next_period} = $1;
-        $self->{date} = $now->add(lc($1) => 1);
+        $self->{date} = $now->add(lc($1).'s' => 1);
         return 1;
     }
     else {
@@ -239,6 +240,14 @@ sub _parse_time {
 
 sub _parse_inc_or_dec {
     my $self = shift;
+
+    if (/\G([+-])\s*(\d+)\s*($period_re)s?\b/gci) {
+        @{$self}{qw(increment increment_period)} = ("$1$2", $3);
+        my $method = ($1 eq '+' ? 'add' : 'subtract');
+        $self->{date} = $self->{date}->$method(lc($3).'s' => $2);
+
+        return 1;
+    }
     return;
 }
 
@@ -247,49 +256,105 @@ __END__
 
 =head1 NAME
 
-DateTime::Format::GnuAt - Perl extension for blah blah blah
+DateTime::Format::GnuAt - Parse time specifications as Debian 'at' command.
 
 =head1 SYNOPSIS
 
   use DateTime::Format::GnuAt;
-  blah blah blah
+
+  $parser = DateTime::Format::GnuAt->new;
+  $dt = $parser->parse_datetime("today");
+  $dt = $parser->parse_datetime("next week + 3 days");
+
 
 =head1 DESCRIPTION
 
-Stub documentation for DateTime::Format::GnuAt, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
+This module implements the same parser rules as Debian 'at' command
+(which is also the 'at' used by most non Debian based Linux
+distributions).
 
-Blah blah blah.
+From the C<at> manual page:
 
-=head2 EXPORT
+=over
 
-None by default.
+C<at> allows fairly complex time specifications, extending the POSIX.2
+standard.  It accepts times of the form C<HH:MM> to run a job at a
+specific time of day. (If that time is already past, the next day is
+assumed.) You may also specify C<minight>, C<noon>, or C<teatime>
+(4pm) and you can have a time-of-day suffixed with C<AM> or C<PM> for
+running in the morning or the evening.  You can also say what day the
+job will be run, by giving a date in the form C<month-name day> with
+an optional C<year>, or giving a date of the form C<MMDD[CC]YY>,
+C<MM/DD/[CC]YY>, C<DD.MM.[CC]YY> or C<[CC]YY-MM-DD>. The specification
+of a date must follow the specification of the time of day. You can
+also give times like C<now + count time-units>, where the time-units
+can be C<minutes>, C<hours>, C<days>, or C<weeks> and you can tell at
+to run the job today by suffixing the time with C<today> and to run
+the job tomorrow by suffixing the time with C<tomorrow>.
 
+For example, to run a job at 4pm three days from now, you would do
+C<at 4pm + 3 days>, to run a job at 10:00am on July 31, you would do
+C<at 10am Jul 31> and to run a job at 1am tomorrow, you would do C<at
+1am tomorrow>.
 
+The definition of the time specification can be found in
+C</usr/share/doc/at/timespec>.
+
+=back
+
+=head2 API
+
+The module provides the following methods:
+
+my $p = DateTime::Format::GnuAt->new;
+
+my $datetime = $p->parse_datetime($string)
+
+my $datetime = $p->parse_datetime($string, %opts)
+
+Parses the given string and returns a DateTime object. On failure it
+croaks.
+
+The following options can also be passed to the method as a list of
+C<$key => $value> pairs after the datetime specification:
+
+=over 4
+
+=item now => $datetime
+
+A DateTime object to be used as the current "now".
+
+This allows to parse the datetime specifications relative to a custom
+date.
+
+It can also be used to set the default time-zone (but default C<local>
+is used).
+
+=back
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<DateTime>.
 
 =head1 AUTHOR
 
-Salvador Fandiño, E<lt>salva@E<gt>
+Salvador Fandiño, E<lt>sfandino@yahoo.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Salvador Fandiño
+Copyright (C) 2013 by Qindel FormaciE<ntilde>n y Servicios, S.L.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.14.2 or,
 at your option, any later version of Perl 5 you may have available.
 
+The Perl code in this module has been written from scratch, though the
+source code of the Debian C<at> command was used for inspiration and
+to determine undocumented behavior.
+
+And excerpt from the L<at(1)> man page has also been copied here.
+
+The C<reference> directory contains the original C files and their
+copyright conditions.
 
 =cut

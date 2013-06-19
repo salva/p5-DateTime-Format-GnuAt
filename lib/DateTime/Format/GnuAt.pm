@@ -315,11 +315,15 @@ C</usr/share/doc/at/timespec>.
 
 The module provides the following methods:
 
-my $p = DateTime::Format::GnuAt->new;
+=over 4
 
-my $datetime = $p->parse_datetime($string)
+=item my $p = DateTime::Format::GnuAt->new;
 
-my $datetime = $p->parse_datetime($string, %opts)
+Returns a new date-time parser object.
+
+=item my $datetime = $p->parse_datetime($string)
+
+=item my $datetime = $p->parse_datetime($string, %opts)
 
 Parses the given string and returns a DateTime object. On failure it
 croaks.
@@ -338,6 +342,8 @@ date.
 
 It can also be used to set the default time-zone (but default C<local>
 is used).
+
+=back
 
 =back
 

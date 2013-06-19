@@ -7,9 +7,14 @@ use warnings;
 use Carp;
 use DateTime;
 
-my @periods = qw(minute hour day week month year);
+my @periods = qw(minute min hour day week month year);
 my $period_re = join '|', @periods;
-$period_re = qr/(?:$period_re)\b/i;
+$period_re = qr/(?:$period_re)/i;
+
+sub _period {
+    my $period = lc shift;
+    return ($period eq 'min' ? 'minutes' : $period.'s');
+}
 
 my (%month, %wday);
 my @months = qw(january february march april may june july august
@@ -48,20 +53,24 @@ sub parse_datetime {
     $self->_reset(\%opts);
 
     for ($spec) {
-        /^\s*/gc;
+        local ($@, $SIG{__DIE__});
+        eval {
+            /^\s*/gc;
 
-        if ($self->_parse_spec_base()) {
+            if ($self->_parse_spec_base()) {
+                /\G\s*/gc;
+                $self->_parse_inc_or_dec;
+            }
             /\G\s*/gc;
-            $self->_parse_inc_or_dec;
-        }
-        /\G\s*/gc;
-        /\G\S/gc and croak "invalid date-time specification '$spec'";
+            /\G\S/gc and die "unparsed rubbish";
 
-        $self->{date}->set_time_zone('UTC');
-
-        return $self->{date};
+            $self->{date}->set_time_zone('UTC');
+        };
+        $self->{error} = $@;
+        return $self->{date} unless $@;
     }
 
+    croak "unable to parse datetime specification '$spec'";
 }
 
 sub _parse_spec_base {
@@ -153,10 +162,10 @@ sub _parse_date {
         # concatenated_date (m[m]dd[cc]yy)
         @{$self}{qw(month day year)} = ($1, $2, $3);
     }
-    elsif (/\Gnext\s+($period_re)/gcio) {
+    elsif (/\Gnext\s+($period_re)\b/gcio) {
         # NEXT inc_dec_period
         $self->{next_period} = $1;
-        $self->{date} = $now->add(lc($1).'s' => 1);
+        $self->{date} = $now->add(_period($1) => 1);
         return 1;
     }
     else {
@@ -186,7 +195,7 @@ sub _parse_date {
                                   month => $self->{month},
                                   day => $self->{day},
                                   hour => $now->hour,
-                                  min => $now->minute,
+                                  minute => $now->minute,
                                   time_zone => $now->time_zone);
 
     return 1;
@@ -244,7 +253,7 @@ sub _parse_inc_or_dec {
     if (/\G([+-])\s*(\d+)\s*($period_re)s?\b/gci) {
         @{$self}{qw(increment increment_period)} = ("$1$2", $3);
         my $method = ($1 eq '+' ? 'add' : 'subtract');
-        $self->{date} = $self->{date}->$method(lc($3).'s' => $2);
+        $self->{date} = $self->{date}->$method(_period($3) => $2);
 
         return 1;
     }
@@ -353,6 +362,9 @@ source code of the Debian C<at> command was used for inspiration and
 to determine undocumented behavior.
 
 And excerpt from the L<at(1)> man page has also been copied here.
+
+The test suite is an adaptation of the C<parsetime.pl> script also
+distributed in the C<at> package.
 
 The C<reference> directory contains the original C files and their
 copyright conditions.

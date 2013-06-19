@@ -325,7 +325,7 @@ Parses the given string and returns a DateTime object. On failure it
 croaks.
 
 The following options can also be passed to the method as a list of
-C<$key => $value> pairs after the datetime specification:
+C<$key => $value> pairs after the date-time specification:
 
 =over 4
 
@@ -333,7 +333,7 @@ C<$key => $value> pairs after the datetime specification:
 
 A DateTime object to be used as the current "now".
 
-This allows to parse the datetime specifications relative to a custom
+This allows to parse the date-time specifications relative to a custom
 date.
 
 It can also be used to set the default time-zone (but default C<local>
@@ -347,11 +347,11 @@ L<DateTime>.
 
 =head1 AUTHOR
 
-Salvador Fandiño, E<lt>sfandino@yahoo.comE<gt>
+Salvador FandiE<ntilde>o, E<lt>sfandino@yahoo.comE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2013 by Qindel FormaciE<ntilde>n y Servicios, S.L.
+Copyright (C) 2013 by Qindel FormaciE<oacute>n y Servicios, S.L.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.14.2 or,

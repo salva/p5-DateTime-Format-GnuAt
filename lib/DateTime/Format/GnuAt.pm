@@ -340,7 +340,7 @@ A DateTime object to be used as the current "now".
 This allows to parse the date-time specifications relative to a custom
 date.
 
-It can also be used to set the default time-zone (but default C<local>
+It can also be used to set the default time-zone (by default C<local>
 is used).
 
 =back

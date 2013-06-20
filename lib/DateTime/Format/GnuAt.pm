@@ -46,7 +46,7 @@ sub _reset {
     %{$self} = ();
     my $now = delete $opts->{now};
     $self->{now} = (defined $now ? $now->clone : DateTime->now(time_zone => 'local'));
-    $self->{now}->set(seconds => 0);
+    $self->{now}->set(second => 0);
 }
 
 sub parse_datetime {

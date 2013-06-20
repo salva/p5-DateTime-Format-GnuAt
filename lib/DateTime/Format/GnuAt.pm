@@ -1,6 +1,6 @@
 package DateTime::Format::GnuAt;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use strict;
 use warnings;
@@ -43,9 +43,10 @@ sub new {
 
 sub _reset {
     my ($self, $opts) = @_;
-    %$self = ();
+    %{$self} = ();
     my $now = delete $opts->{now};
     $self->{now} = (defined $now ? $now->clone : DateTime->now(time_zone => 'local'));
+    $self->{now}->set(seconds => 0);
 }
 
 sub parse_datetime {

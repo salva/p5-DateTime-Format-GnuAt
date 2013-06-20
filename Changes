@@ -1,6 +1,7 @@
 Revision history for Perl extension DateTime::Format::GnuAt.
 
 0.03
+        - set seconds slot to zero
         - the passed now object was being modified
 
 0.02  Jun 19, 2003

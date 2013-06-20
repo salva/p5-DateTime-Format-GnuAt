@@ -44,7 +44,8 @@ sub new {
 sub _reset {
     my ($self, $opts) = @_;
     %$self = ();
-    $self->{now} = delete($opts->{now}) // DateTime->now(time_zone => 'local');
+    my $now = delete $opts->{now};
+    $self->{now} = (defined $now ? $now->clone : DateTime->now(time_zone => 'local'));
 }
 
 sub parse_datetime {
@@ -145,7 +146,7 @@ sub _parse_date {
     }
     elsif (/\Gnow\b/gci) {
         # NOW
-        $self->{now} = 1;
+        $self->{is_now} = 1;
         $self->{date} = $now;
         return 1;
     }
